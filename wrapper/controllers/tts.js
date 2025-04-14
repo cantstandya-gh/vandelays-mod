@@ -5,6 +5,7 @@ const info = require("../data/voices");
 const mp3Duration = require("mp3-duration");
 const processVoice = require("../models/tts");
 const tempfile = require("tempfile");
+const baseVoiceMap = require("../data/voices").voices;
 
 const group = new httpz.Group();
 const { voices } = require("../data/voices-runtime");
@@ -28,9 +29,17 @@ let xml = "";
       const sapis = sapiVoiceData["SAPI 5:"] || {};
   
       Object.entries(sapis).forEach(([name, meta]) => {
-        let cleanedName = name.replace(/^Microsoft /i, "").replace(/ Desktop$/i, "").trim();
+        // Clean name: remove "Microsoft", "Desktop", "Mobile"
+        let cleanedName = name.replace(/^Microsoft /i, "").replace(/ (Desktop|Mobile)$/i, "").trim();
+      
+        // Special case: Microsoft Eva Mobile = Cortana
+        if (cleanedName.toLowerCase() === "eva") {
+          cleanedName = "Cortana";
+        }
+      
+        // Convert to ID-style key: all lowercase, underscores, no parentheses
         const originalTitle = cleanedName.toLowerCase().replace(/\s+/g, "_");
-  
+      
         // Title deduplication logic
         let title = originalTitle;
         let suffix = "";
@@ -40,20 +49,26 @@ let xml = "";
           title = originalTitle + suffix;
           i++;
         }
-  
-        // Description handling
+      
+        // Force suffix for non-Cortana voices
+        if (!title.endsWith("_sapi5")) {
+          title = title + "_sapi5";
+        }
+      
+        // Check for conflict in desc
         let desc = cleanedName;
         const conflict = Object.values(baseVoiceMap).some(v => v.desc?.toLowerCase() === desc.toLowerCase());
         if (conflict) desc += " (SAPI5)";
-  
+      
+        // Add to voice list
         voices[title] = {
-          lang: meta.lang?.toLowerCase() || "en",
-          country: meta.lang?.toUpperCase() || "US",
+          language: meta.lang?.toLowerCase() || "en",
+          country: "US",
           gender: meta.gender === "F" ? "F" : "M",
           desc,
           arg: name,
           source: "sapi5"
-        };
+        };      
       });
     } catch (e) {
       console.warn("Failed to load SAPI5 voices:", e.message);

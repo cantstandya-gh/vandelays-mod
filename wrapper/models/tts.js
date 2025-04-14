@@ -122,6 +122,26 @@ module.exports = function processVoice(voiceName, text) {
 					break;
 				}
 
+				case "sapi5": {
+					const Balabolka = require("../../utils/node-balcon");
+					const path = require("path");
+					const balcon = new Balabolka({
+						balaPath: path.join(__dirname, "../../utils/balcon/balcon.exe")
+					});
+					
+					balcon
+						.voice(voice.arg)
+						.text(text)
+						.generate()
+						.then(buffer => {
+							fileUtil.convertToMp3(buffer, "wav")
+							.then(mp3 => resolve(mp3))
+							.catch(err => rej(err));
+						})
+						.catch(err => rej("SAPI5 TTS failed: " + err.message));					
+					break;
+				}				
+
 				case "cepstral": {
 					https.get("https://www.cepstral.com/en/demos", async (r) => {
 						r.on("error", (e) => rej(e));

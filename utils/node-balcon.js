@@ -58,6 +58,9 @@ module.exports = class Balabolka {
 			this.args[1] = filepath;
 
 			let buffers = [];
+			if (!fs.existsSync(this.balaPath)) {
+				console.warn("[node-balcon] balcon.exe not found at", this.balaPath);
+			  }			  
 			const balcon = spawn(this.balaPath, this.args);
 
 			balcon.stdout.on("data", (c) => buffers.push(c));
@@ -80,6 +83,9 @@ module.exports = class Balabolka {
 	listVoices() {
 		return new Promise((res, rej) => {
 			let buffers = [];
+			if (!fs.existsSync(this.balaPath)) {
+				console.warn("[node-balcon] balcon.exe not found at", this.balaPath);
+			  }			  
 			const balcon = spawn(this.balaPath, ["-l"]);
 	
 			balcon.stdout.on("data", (c) => buffers.push(c));
@@ -97,7 +103,10 @@ module.exports = class Balabolka {
 	
 						const voice = await new Promise((res, rej) => {
 							let buffers = [];
-							const balcon = spawn("balcon", ["-n", voiceName, "-m"]);
+							if (!fs.existsSync(this.balaPath)) {
+								console.warn("[node-balcon] balcon.exe not found at", this.balaPath);
+							  }							  
+							const balcon = spawn(this.balaPath, ["-n", voiceName, "-m"]);
 					
 							balcon.stdout.on("data", (b) => buffers.push(b));
 							balcon.stdout.on("end", () => {
