@@ -185,36 +185,6 @@ group
 			},
 			object: toObjectString
 		});
-	})
-	.route("GET", "/exportPlayer", async (req, res) => {
-		discord("Video Export");
-
-		const { IS_WIDE } = DB.select();
-		let flashvars = {
-			autostart: 1,
-			isWide: IS_WIDE,
-			ut: 60,
-			apiserver: "/",
-			storePath: STORE_URL + "/<store>",
-			clientThemePath: CLIENT_URL + "/<client_theme>"
-		};
-		Object.assign(flashvars, req.query);
-
-		res.render("app/player", {
-			attrs: {
-				data: SWF_URL + "/player.swf",
-				type: "application/x-shockwave-flash",
-				width: "100%",
-				height: "100%",
-				quality: "medium"
-			},
-			params: {
-				flashvars,
-				allowScriptAccess: "always",
-				allowFullScreen: "true"
-			},
-			object: toObjectString
-		});
 	});
 
 module.exports = group;
