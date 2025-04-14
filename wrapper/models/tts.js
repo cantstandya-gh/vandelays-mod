@@ -457,6 +457,80 @@ module.exports = function processVoice(voiceName, text) {
 						.on("error", rej);
 					break;
 				}
+				case "cobaltspeech": {
+					const q = new URLSearchParams({
+						"text.text": text,
+						"config.model_id": voice.lang,
+						"config.speaker_id": voice.arg,
+						"config.speech_rate": 1,
+						"config.variation_scale": 0,
+						"config.audio_format.codec": "AUDIO_CODEC_WAV"
+					}).toString();
+
+					https.get({
+						hostname: "demo.cobaltspeech.com",
+						path: `/voicegen/api/voicegen/v1/streaming-synthesize?${q}`,
+					}, (r) => fileUtil.convertToMp3(r, "wav").then(res).catch(rej)).on("error", rej);
+					break;
+				}
+				case "azure": {
+					const voiceID = voice.arg;
+					const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/119.0 Safari/537.36";
+					const headers = {
+						"User-Agent": userAgent,
+						"Referer": "https://www.bing.com/translator",
+						"Origin": "https://bing.com"
+					};
+				
+					// Step 1 - Get IG, IID, and AbusePreventionHelper token/key
+					https.get("https://www.bing.com/translator", { headers }, (r) => {
+						let html = "";
+						r.on("data", chunk => html += chunk);
+						r.on("end", () => {
+							try {
+								const ig = html.match(/IG:"([^"]+)"/)?.[1];
+								const iid = html.match(/data-iid="([^"]+)"/)?.[1];
+								const aphMatch = html.match(/params_AbusePreventionHelper\s*=\s*(\[[^\]]+\])/);
+								const [key, token] = JSON.parse(aphMatch?.[1] || "[]");
+				
+								if (!ig || !iid || !token || !key) return rej("Failed to extract Bing TTS auth parameters");
+				
+								// Prepare SSML
+								const bcpLocale = voiceID.match(/^[a-z]{2,3}-[A-Z]{2}/)?.[0] || "en-US";
+								const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${bcpLocale}"><voice xml:lang="${bcpLocale}" name="${voiceID}">${text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</voice></speak>`;
+				
+								// Step 2 - Send TTS request
+								const postData = JSON.stringify({ ssml, token, key });
+								const req = https.request({
+									hostname: "www.bing.com",
+									path: `/tfettts?isVertical=1&IG=${ig}&IID=${iid}`,
+									method: "POST",
+									headers: {
+										...headers,
+										"Content-Type": "application/json",
+										"Content-Length": Buffer.byteLength(postData)
+									}
+								}, (res) => {
+									let audio = [];
+									res.on("data", chunk => audio.push(chunk));
+									res.on("end", () => {
+										if (res.statusCode === 200 && res.headers["content-type"] === "audio/mpeg") {
+											resolve(Buffer.concat(audio));
+										} else {
+											rej(`Azure TTS failed: HTTP ${res.statusCode}`);
+										}
+									});
+								});
+								req.on("error", rej);
+								req.write(postData);
+								req.end();
+							} catch (err) {
+								rej("Azure TTS extraction error: " + err.message);
+							}
+						});
+					}).on("error", rej);
+					break;
+				}				
 				case "svox": {
 					const q = new URLSearchParams({
 						speed: 0,
