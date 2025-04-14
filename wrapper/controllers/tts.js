@@ -5,7 +5,6 @@ const info = require("../data/voices");
 const mp3Duration = require("mp3-duration");
 const processVoice = require("../models/tts");
 const tempfile = require("tempfile");
-const os = require("os");
 
 const group = new httpz.Group();
 const { voices } = require("../data/voices-runtime");
@@ -14,7 +13,54 @@ const langs = {};
 let xml = "";
 
 (async () => {
-  if (os.platform() === "darwin") {
+  if (process.platform === "win32") {
+    console.log("Windows detected. Loading node-balcon...");
+  
+    try {
+      const path = require("path");
+      const Balabolka = require("../../utils/node-balcon");
+  
+      const balcon = new Balabolka({
+        balaPath: path.join(__dirname, "../../utils/balcon/balcon.exe")
+      });
+  
+      const sapiVoiceData = await balcon.listVoices();
+      const sapis = sapiVoiceData["SAPI 5:"] || {};
+  
+      Object.entries(sapis).forEach(([name, meta]) => {
+        let cleanedName = name.replace(/^Microsoft /i, "").replace(/ Desktop$/i, "").trim();
+        const originalTitle = cleanedName.toLowerCase().replace(/\s+/g, "_");
+  
+        // Title deduplication logic
+        let title = originalTitle;
+        let suffix = "";
+        let i = 1;
+        while (voices[title] || baseVoiceMap[title]) {
+          suffix = i === 1 ? "_sapi5" : `_sapi5_${i}`;
+          title = originalTitle + suffix;
+          i++;
+        }
+  
+        // Description handling
+        let desc = cleanedName;
+        const conflict = Object.values(baseVoiceMap).some(v => v.desc?.toLowerCase() === desc.toLowerCase());
+        if (conflict) desc += " (SAPI5)";
+  
+        voices[title] = {
+          lang: meta.lang?.toLowerCase() || "en",
+          country: meta.lang?.toUpperCase() || "US",
+          gender: meta.gender === "F" ? "F" : "M",
+          desc,
+          arg: name,
+          source: "sapi5"
+        };
+      });
+    } catch (e) {
+      console.warn("Failed to load SAPI5 voices:", e.message);
+    }
+  }
+  
+  if (process.platform === "darwin") {
     console.log("MacOS detected. Loading node-macintalk...");
     try {
       const { listVoices } = require("../../utils/node-macintalk");
