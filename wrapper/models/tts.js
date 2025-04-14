@@ -128,19 +128,19 @@ module.exports = function processVoice(voiceName, text) {
 					const balcon = new Balabolka({
 						balaPath: path.join(__dirname, "../../utils/balcon/balcon.exe")
 					});
-					
+
 					balcon
 						.voice(voice.arg)
 						.text(text)
 						.generate()
 						.then(buffer => {
 							fileUtil.convertToMp3(buffer, "wav")
-							.then(mp3 => resolve(mp3))
-							.catch(err => rej(err));
+								.then(mp3 => resolve(mp3))
+								.catch(err => rej(err));
 						})
-						.catch(err => rej("SAPI5 TTS failed: " + err.message));					
+						.catch(err => rej("SAPI5 TTS failed: " + err.message));
 					break;
-				}				
+				}
 
 				case "cepstral": {
 					https.get("https://www.cepstral.com/en/demos", async (r) => {
@@ -308,7 +308,7 @@ module.exports = function processVoice(voiceName, text) {
 				case "sapi4": {
 					const voiceEncoded = encodeURIComponent(voice.arg);
 					let pitch, speed; // ✅ Unpopulated by default
-				
+
 					if (voice.desc.includes("BonziBUDDY")) {
 						pitch = 140;
 						speed = 157;
@@ -333,19 +333,19 @@ module.exports = function processVoice(voiceName, text) {
 									r.on("error", rejectLimit);
 								}).on("error", rejectLimit);
 							});
-				
+
 							pitch = limits.pitch;
 							speed = limits.speed;
 						} catch (err) {
 							return reject("SAPI4 limitation fetch failed: " + err);
 						}
 					}
-				
+
 					// ✅ Build query params dynamically
 					const q = new URLSearchParams({ text, voice: voice.arg });
 					if (pitch !== undefined) q.set("pitch", pitch);
 					if (speed !== undefined) q.set("speed", speed);
-				
+
 					https.get({
 						hostname: "www.tetyys.com",
 						path: `/SAPI4/SAPI4?${q.toString()}`,
@@ -353,12 +353,12 @@ module.exports = function processVoice(voiceName, text) {
 						let totalSize = 0;
 						r.on("data", chunk => totalSize += chunk.length);
 						r.on("end", () => console.log("SAPI4 audio size:", totalSize));
-				
+
 						fileUtil.convertToMp3(r, "wav").then(resolve).catch(rej);
 					}).on("error", rej);
-				
+
 					break;
-				}				
+				}
 
 				case "svox2": {
 					const q = new URLSearchParams({
@@ -470,10 +470,11 @@ module.exports = function processVoice(voiceName, text) {
 					https.get({
 						hostname: "demo.cobaltspeech.com",
 						path: `/voicegen/api/voicegen/v1/streaming-synthesize?${q}`,
-					}, (r) => fileUtil.convertToMp3(r, "wav").then(res).catch(rej)).on("error", rej);
+					}, (r) => fileUtil.convertToMp3(r, "wav").then(resolve).catch(rej)).on("error", rej);
 					break;
 				}
 				case "azure": {
+					/*
 					const voiceID = voice.arg;
 					const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/119.0 Safari/537.36";
 					const headers = {
@@ -481,7 +482,7 @@ module.exports = function processVoice(voiceName, text) {
 						"Referer": "https://www.bing.com/translator",
 						"Origin": "https://bing.com"
 					};
-				
+
 					// Step 1 - Get IG, IID, and AbusePreventionHelper token/key
 					https.get("https://www.bing.com/translator", { headers }, (r) => {
 						let html = "";
@@ -491,16 +492,42 @@ module.exports = function processVoice(voiceName, text) {
 								const ig = html.match(/IG:"([^"]+)"/)?.[1];
 								const iid = html.match(/data-iid="([^"]+)"/)?.[1];
 								const aphMatch = html.match(/params_AbusePreventionHelper\s*=\s*(\[[^\]]+\])/);
-								const [key, token] = JSON.parse(aphMatch?.[1] || "[]");
-				
-								if (!ig || !iid || !token || !key) return rej("Failed to extract Bing TTS auth parameters");
-				
+
+								if (!aphMatch || !aphMatch[1]) {
+									console.warn("Could not extract AbusePreventionHelper from Bing Translator HTML.");
+									return rej("AbusePreventionHelper missing.");
+								}
+
+								let key, token;
+								try {
+									[key, token] = JSON.parse(aphMatch[1]);
+								} catch (err) {
+									console.warn("Token parse error:", aphMatch[1]);
+									return rej("Failed to parse token/key.");
+								}
+
+								if (!ig || !iid || !token || !key) {
+									console.warn("IG, IID, or token/key missing.", { ig, iid, key, token });
+									return rej("Failed to extract Bing TTS auth parameters");
+								}
+
 								// Prepare SSML
+								const escapeXml = str =>
+									str.replace(/&/g, "&amp;")
+										.replace(/</g, "&lt;")
+										.replace(/>/g, "&gt;")
+										.replace(/"/g, "&quot;")
+										.replace(/'/g, "&apos;");
+								const escapedText = escapeXml(text);
 								const bcpLocale = voiceID.match(/^[a-z]{2,3}-[A-Z]{2}/)?.[0] || "en-US";
-								const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${bcpLocale}"><voice xml:lang="${bcpLocale}" name="${voiceID}">${text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</voice></speak>`;
-				
+								const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${bcpLocale}"><voice xml:lang="${bcpLocale}" name="${voiceID}">${escapedText}</voice></speak>`;
+
 								// Step 2 - Send TTS request
-								const postData = JSON.stringify({ ssml, token, key });
+								const postData = JSON.stringify({ ssml, token, key: String(key) });
+								console.log("Token:", token);
+								console.log("Key:", key);
+								console.log("Final POST body:", postData);
+
 								const req = https.request({
 									hostname: "www.bing.com",
 									path: `/tfettts?isVertical=1&IG=${ig}&IID=${iid}`,
@@ -530,7 +557,10 @@ module.exports = function processVoice(voiceName, text) {
 						});
 					}).on("error", rej);
 					break;
-				}				
+					*/
+					rej("Not working yet. API keeps returning error 400");
+					break;
+				}
 				case "svox": {
 					const q = new URLSearchParams({
 						speed: 0,
