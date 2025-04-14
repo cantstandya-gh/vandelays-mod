@@ -24,6 +24,246 @@
 			"arg": "bush",
 			"desc": "Bush"
 		},
+		"sam": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "sapi4",
+			"arg": "Sam",
+			"desc": "Sam"
+		},
+		"mike1": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "sapi4",
+			"arg": "Mike",
+			"desc": "Mike (Microsoft)"
+		},
+		"mikeonthephone": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "sapi4",
+			"arg": "Mike (for Telephone)",
+			"desc": "Mike (On The Phone)"
+		},
+		"mikeinthehall": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "sapi4",
+			"arg": "Mike in Hall",
+			"desc": "Mike (In The Hall)"
+		},
+		"mikeinspace": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "sapi4",
+			"arg": "Mike in Space",
+			"desc": "Mike (In Space)"
+		},
+		"mikeinsidethestadium": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "sapi4",
+			"arg": "Mike in Stadium",
+			"desc": "Mike (Inside The Stadium)"
+		},
+		"robosoftsix": {
+			"country": "US",
+			"language": "en",
+			"gender": "F",
+			"source": "sapi4",
+			"arg": "RoboSoft Six",
+			"desc": "RoboSoft Six"
+		},
+		"robosoftfive": {
+			"country": "US",
+			"language": "en",
+			"gender": "F",
+			"source": "sapi4",
+			"arg": "RoboSoft Five",
+			"desc": "RoboSoft Five"
+		},
+		"robosoftfour": {
+			"country": "US",
+			"language": "en",
+			"gender": "F",
+			"source": "sapi4",
+			"arg": "RoboSoft Four",
+			"desc": "RoboSoft Four"
+		},
+		"robosoftthree": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "sapi4",
+			"arg": "RoboSoft Three",
+			"desc": "RoboSoft Three"
+		},
+		"robosofttwo": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "sapi4",
+			"arg": "RoboSoft Two",
+			"desc": "RoboSoft Two"
+		},
+		"robosoftone": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "sapi4",
+			"arg": "RoboSoft One",
+			"desc": "RoboSoft One"
+		},
+		"malewhisper": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "sapi4",
+			"arg": "Male Whisper",
+			"desc": "Male Whisper"
+		},
+		"femalewhisper": {
+			"country": "US",
+			"language": "en",
+			"gender": "F",
+			"source": "sapi4",
+			"arg": "Female Whisper",
+			"desc": "Female Whisper"
+		},
+		"mary": {
+			"country": "US",
+			"language": "en",
+			"gender": "F",
+			"source": "sapi4",
+			"arg": "Mary",
+			"desc": "Mary"
+		},
+		"maryonthephone": {
+			"country": "US",
+			"language": "en",
+			"gender": "F",
+			"source": "sapi4",
+			"arg": "Mary (for Telephone)",
+			"desc": "Mary (On The Phone)"
+		},
+		"maryinthehall": {
+			"country": "US",
+			"language": "en",
+			"gender": "F",
+			"source": "sapi4",
+			"arg": "Mary in Hall",
+			"desc": "Mary (In The Hall)"
+		},
+		"maryinspace": {
+			"country": "US",
+			"language": "en",
+			"gender": "F",
+			"source": "sapi4",
+			"arg": "Mary in Space",
+			"desc": "Mary (In Space)"
+		},
+		"maryinsidethestadium": {
+			"country": "US",
+			"language": "en",
+			"gender": "F",
+			"source": "sapi4",
+			"arg": "Mary in Stadium",
+			"desc": "Mary (Inside The Stadium)"
+		},
+		"truvoicewanda": {
+			"country": "US",
+			"language": "en",
+			"gender": "F",
+			"source": "sapi4",
+			"arg": "Adult Female #1, American English (TruVoice)",
+			"desc": "Wanda"
+		},
+		"truvoicejulia": {
+			"country": "US",
+			"language": "en",
+			"gender": "F",
+			"source": "sapi4",
+			"arg": "Adult Female #2, American English (TruVoice)",
+			"desc": "Julia"
+		},
+		"truvoicepeter": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "sapi4",
+			"arg": "Adult Male #1, American English (TruVoice)",
+			"desc": "Peter"
+		},
+		"truvoicesidney": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "sapi4",
+			"arg": "Adult Male #2, American English (TruVoice)",
+			"desc": "Sidney"
+		},
+		"truvoiceeddie": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "sapi4",
+			"arg": "Adult Male #3, American English (TruVoice)",
+			"desc": "Eddie"
+		},
+		"truvoicedouglas": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "sapi4",
+			"arg": "Adult Male #4, American English (TruVoice)",
+			"desc": "Douglas"
+		},
+		"truvoicebiff": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "sapi4",
+			"arg": "Adult Male #5, American English (TruVoice)",
+			"desc": "Biff"
+		},
+		"truvoiceamos": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "sapi4",
+			"arg": "Adult Male #6, American English (TruVoice)",
+			"desc": "Amos"
+		},
+		"truvoicemelvin": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "sapi4",
+			"arg": "Adult Male #7, American English (TruVoice)",
+			"desc": "Melvin"
+		},
+		"truvoicealex": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "sapi4",
+			"arg": "Adult Male #8, American English (TruVoice)",
+			"desc": "Alex"
+		},
+		"bonzibuddy": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "sapi4",
+			"arg": "Adult Male #2, American English (TruVoice)",
+			"desc": "BonziBUDDY"
+		},
 		"ava": {
 			"country": "US",
 			"language": "en",

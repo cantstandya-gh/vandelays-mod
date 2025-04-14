@@ -60,16 +60,16 @@ module.exports = function processVoice(voiceName, text) {
 										r.on("data", (d) => buffers.push(d));
 										r.on("end", () => {
 											const html = Buffer.concat(buffers).toString();
-										  
+
 											if (html.includes("err_code=")) {
-										    	return rej("Acapela returned err_code in response.");
+												return rej("Acapela returned err_code in response.");
 											}
-										  
+
 											const match = html.match(/&snd_url=(https:\/\/[^\s&"]+\.mp3)/);
 											if (!match || !match[1]) {
 												return rej("Acapela MP3 URL not found in response.");
 											}
-										  
+
 											const audioUrl = match[1];
 											https.get(audioUrl, resolve).on("error", rej);
 										});
@@ -107,20 +107,20 @@ module.exports = function processVoice(voiceName, text) {
 						const tts = new MacinTalk()
 							.voice(voice.arg)
 							.text(text);
-				  
-					  	tts.generate()
+
+						tts.generate()
 							.then(buffer => {
 								console.log("Generated buffer size:", buffer?.length);
 								return fileUtil.convertToMp3(buffer, "aiff")
-										.then(mp3 => resolve(mp3))
-										.catch(err => rej(err));
+									.then(mp3 => resolve(mp3))
+									.catch(err => rej(err));
 							})
 							.catch(err => rej("Apple TTS failed: " + err.message));
 					} catch (err) {
-					  reject("Apple TTS exception: " + err.message);
+						reject("Apple TTS exception: " + err.message);
 					}
 					break;
-				}				  
+				}
 
 				case "cepstral": {
 					https.get("https://www.cepstral.com/en/demos", async (r) => {
@@ -284,6 +284,61 @@ module.exports = function processVoice(voiceName, text) {
 					);
 					break;
 				}
+
+				case "sapi4": {
+					const voiceEncoded = encodeURIComponent(voice.arg);
+					let pitch, speed; // ✅ Unpopulated by default
+				
+					if (voice.desc.includes("BonziBUDDY")) {
+						pitch = 140;
+						speed = 157;
+					} else {
+						try {
+							const limits = await new Promise((resolveLimit, rejectLimit) => {
+								https.get(`https://www.tetyys.com/SAPI4/VoiceLimitations?voice=${voiceEncoded}`, (r) => {
+									let body = "";
+									r.on("data", (chunk) => body += chunk);
+									r.on("end", () => {
+										try {
+											const json = JSON.parse(body);
+											resolveLimit({
+												pitch: json.defPitch,
+												speed: json.defSpeed
+											});
+										} catch (err) {
+											console.error("SAPI4 voice limitation error (bad JSON):", body);
+											rejectLimit("Invalid or unsupported SAPI4 voice: " + voice.arg);
+										}
+									});
+									r.on("error", rejectLimit);
+								}).on("error", rejectLimit);
+							});
+				
+							pitch = limits.pitch;
+							speed = limits.speed;
+						} catch (err) {
+							return reject("SAPI4 limitation fetch failed: " + err);
+						}
+					}
+				
+					// ✅ Build query params dynamically
+					const q = new URLSearchParams({ text, voice: voice.arg });
+					if (pitch !== undefined) q.set("pitch", pitch);
+					if (speed !== undefined) q.set("speed", speed);
+				
+					https.get({
+						hostname: "www.tetyys.com",
+						path: `/SAPI4/SAPI4?${q.toString()}`,
+					}, (r) => {
+						let totalSize = 0;
+						r.on("data", chunk => totalSize += chunk.length);
+						r.on("end", () => console.log("SAPI4 audio size:", totalSize));
+				
+						fileUtil.convertToMp3(r, "wav").then(resolve).catch(rej);
+					}).on("error", rej);
+				
+					break;
+				}				
 
 				case "svox2": {
 					const q = new URLSearchParams({
