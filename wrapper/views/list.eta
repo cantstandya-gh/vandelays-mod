@@ -73,10 +73,11 @@
 							<span>${date}, ${time}</span>
 						</td>
 						<td>
-							<a href="javascript:;" onclick="popup('${tbl.id}')"></a>
-							<a href="/go_full?movieId=${tbl.id}"></a>
-							<a href="/file/movie/file/${tbl.id}" download="${tbl.title}.zip"></a>
-							<a href="#" onclick="destructive('${tbl.id}', 'delete')"></a>
+							<a href="javascript:;" onclick="popup('${tbl.id}')" title="Preview"></a>
+							<a href="/go_full?movieId=${tbl.id}" title="Edit in LVM"></a>
+							<a href="/file/movie/file/${tbl.id}" download="${tbl.title}.zip" title="Download ZIP"></a>
+							<a href="/exportPlayer?id=${tbl.id}" title="Export to MP4"></a>
+							<a href="#" onclick="destructive('${tbl.id}', 'delete')" title="Delete"></a>
 						</td>
 					</tr>`.trim()
 				);
