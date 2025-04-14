@@ -101,6 +101,32 @@ module.exports = function processVoice(voiceName, text) {
 					break;
 				}
 
+				case "dectalk": {
+					const combinedText = `${voice.arg} ${text}`;
+					const encoded = encodeURIComponent(combinedText);
+					const triggerURL = `https://tts.cyzon.us/tts?text=${encoded}`;
+				
+					https.get(triggerURL, (res) => {
+						const redirectPath = res.headers.location;
+				
+						// Normalize and construct full URL
+						if (res.statusCode === 302 && redirectPath) {
+							const absoluteURL = redirectPath.startsWith("http")
+								? redirectPath
+								: `https://tts.cyzon.us${redirectPath}`;
+				
+							https.get(absoluteURL, (wavStream) => {
+								console.log("DECTalk stream URL:", absoluteURL);
+								fileUtil.convertToMp3(wavStream, "wav").then(resolve).catch(rej);
+							}).on("error", rej);
+						} else {
+							rej(`DECTalk failed to redirect properly. Status: ${res.statusCode}`);
+						}
+					}).on("error", rej);
+				
+					break;
+				}
+				
 				case "apple": {
 					const { MacinTalk } = require("../../utils/node-macintalk");
 					try {
