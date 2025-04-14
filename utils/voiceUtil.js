@@ -228,5 +228,85 @@ module.exports = {
             return;
             }
         })
+    },
+
+    async resolveCereprocAccent(voice) {
+      const langCode = voice.language.toLowerCase() || "";
+      const countryCode = voice.country.toUpperCase() || "";
+      const baseLang = langCode.split("-")[0];
+      const region = langCode.split("-")[1]?.toUpperCase() || countryCode;
+    
+      const langMap = {
+        en: "English",
+        fr: "French",
+        de: "German",
+        es: "Spanish",
+        ca: "Catalan",
+        cn: "Chinese",
+        nl: "Dutch",
+        ga: "Gaeilge",
+        gd: "Gaelic",
+        pt: "Portuguese",
+        it: "Italian",
+        jp: "Japanese",
+        lt: "Lithuanian",
+        no: "Norwegian",
+        pl: "Polish",
+        ro: "Romanian",
+        ru: "Russian",
+        se: "Swedish",
+        cy: "Welsh",
+        da: "Danish"
+      };
+    
+      let language = langMap[baseLang] || "English";
+      let accent = "General American";
+    
+      if (language === "English" && region === "FR") {
+        accent = "Sexy French";
+      } else if (language === "French" && region === "FR") {
+        accent = "French";
+      } else if (language === "French" && region === "CA") {
+        accent = "Canadian";
+      } else if (language === "Portuguese" && region === "BR") {
+        accent = "Brazillian";
+      } else if (language === "Portuguese" && region === "PT") {
+        accent = "Portuguese";
+      } else if (language === "German" && region === "AT") {
+        accent = "Austrian";
+      } else if (language === "German" && region === "DE") {
+        accent = "German";
+      } else if (language === "Catalan" && region === "ES") {
+        accent = "España";
+      } else if (language === "Gaeilge" && region === "IE") {
+        accent = "Irish";
+      } else if (language === "Gaelic" && region === "GB") {
+        accent = "Scottish";
+      } else if (voice.desc.includes("Amy") || voice.desc.includes("Ben") || voice.desc.includes("Claire") || voice.desc.includes("Demon") || voice.desc.includes("Giles") || voice.desc.includes("Goblin") || voice.desc.includes("Jack") || voice.desc.includes("Jess") || voice.desc.includes("Lauren") || voice.desc.includes("Lily") || voice.desc.includes("Pixie") || voice.desc.includes("Robot") || voice.desc.includes("Sarah") || voice.desc.includes("Sue") || voice.desc.includes("William")) {
+        if (voice.engine === "cereproc") {
+          accent = "RP";
+        }
+      } else if (voice.desc.includes("Hulda")) {
+        accent = "Norwegian - Nynorsk";
+      } else {
+        const accentMap = {
+          US: "General American",
+          GB: "Scottish",
+          IE: "Irish",
+          ES: "España",
+          CA: "Canadian",
+          CN: "Chinese",
+          DK: "Danish",
+          NL: "Dutch",
+          DE: "German",
+          IT: "Italian",
+          JP: "Japanese",
+          LT: "Lithuanian",
+          NO: "Norwegian - Bokmål"
+        };
+        accent = accentMap[region] || "General American";
+      }
+    
+      return { lang: language, accent };
     }
 }

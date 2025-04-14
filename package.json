@@ -26,11 +26,13 @@
 		"js-md5": "^0.7.3",
 		"mime-types": "^2.1.35",
 		"mp3-duration": "^1.1.0",
+		"node-macintalk": "^1.0.0",
 		"node-static": "^0.7.11",
 		"node-zip": "github:kyriosli/node-zip",
 		"sharp": "^0.33.5",
 		"tempfile": "^3.0.0",
 		"undici": "^5.6.0",
+		"uuidv4": "^6.2.13",
 		"xmldoc": "^1.1.2"
 	},
 	"devDependencies": {

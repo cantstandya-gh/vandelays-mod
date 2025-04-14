@@ -1,5 +1,29 @@
 ﻿{
 	"voices": {
+		"heather22k": {
+			"country": "US",
+			"language": "en",
+			"gender": "F",
+			"source": "acapela2",
+			"arg": "Heather22k",
+			"desc": "Heather"
+		},
+		"obamasvox": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "svox",
+			"arg": "obama",
+			"desc": "Obama (SVOX)"
+		},
+		"bush": {
+			"country": "US",
+			"language": "en",
+			"gender": "M",
+			"source": "svox2",
+			"arg": "bush",
+			"desc": "Bush"
+		},
 		"ava": {
 			"country": "US",
 			"language": "en",

@@ -1,5 +1,6 @@
 const ffmpeg = require("fluent-ffmpeg");
 ffmpeg.setFfmpegPath(require("@ffmpeg-installer/ffmpeg").path);
+const { Readable } = require("stream");
 const mp3Duration = require("mp3-duration");
 const sharp = require("sharp");
 
@@ -18,20 +19,37 @@ module.exports = {
 			});
 		});
 	},
-	
+
 	/**
 	 * converts a sound to an mp3
 	 * @param {Buffer} data sound buffer
 	 * @param {string} ext original sound extension
 	 * @returns {ReadableStream}
 	 */
+
 	convertToMp3(data, ext) {
 		return new Promise((resolve, rej) => {
-			const command = ffmpeg(data)
+			let stream;
+
+			if (Buffer.isBuffer(data)) {
+				stream = new Readable();
+				stream._read = () => { };
+				stream.push(data);
+				stream.push(null);
+			} else if (typeof data.pipe === "function") {
+				// IncomingMessage stream (e.g. VoiceForge)
+				stream = data;
+			} else {
+				return rej(new TypeError("Unsupported data type passed to convertToMp3"));
+			}
+
+			const command = ffmpeg()
+				.input(stream)
 				.inputFormat(ext)
 				.toFormat("mp3")
-                .audioBitrate('44100k')
-				.on("error", (e) => rej("Error converting audio:", e));
+				.audioBitrate("44100k")
+				.on("error", (e) => rej("Error converting audio: " + e.message));
+
 			resolve(command.pipe());
 		});
 	},

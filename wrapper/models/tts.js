@@ -6,7 +6,7 @@ const fileUtil = require("../../utils/realFileUtil");
 const fs = require("fs");
 const https = require("https");
 const http = require("http");
-const voices = require("../data/voices.json").voices;
+const voices = require("../data/voices-runtime").voices;
 
 /**
  * uses tts demos to generate tts
@@ -24,10 +24,10 @@ module.exports = function processVoice(voiceName, text) {
 		try {
 			switch (voice.source) {
 				case "acapela": {
-					let acapelaArray = [];
-					for (let c = 0; c < 15; c++) acapelaArray.push(~~(65 + Math.random() * 26));
-					const email = `${String.fromCharCode.apply(null, acapelaArray)}@gmail.com`;
-	
+					let fakeEmailArray = [];
+					for (let c = 0; c < 15; c++) fakeEmailArray.push(~~(65 + Math.random() * 26));
+					const email = `${String.fromCharCode.apply(null, fakeEmailArray)}@gmail.com`;
+
 					let req = https.request(
 						{
 							hostname: "acapelavoices.acapela-group.com",
@@ -52,20 +52,26 @@ module.exports = function processVoice(voiceName, text) {
 										},
 									},
 									(r) => {
+										if (r.statusCode === 500) {
+											return rej("Acapela request failed: HTTP 500 Internal Server Error");
+										}
+
 										let buffers = [];
 										r.on("data", (d) => buffers.push(d));
 										r.on("end", () => {
-											const html = Buffer.concat(buffers);
-											const beg = html.indexOf("&snd_url=") + 9;
-											const end = html.indexOf("&", beg);
-											const sub = html.subarray(beg, end).toString();
-											if (sub.includes("err_code")) {
-												rej("An error occured during generation.");
-												return;
+											const html = Buffer.concat(buffers).toString();
+										  
+											if (html.includes("err_code=")) {
+										    	return rej("Acapela returned err_code in response.");
 											}
-											https
-												.get(sub, resolve)
-												.on("error", rej);
+										  
+											const match = html.match(/&snd_url=(https:\/\/[^\s&"]+\.mp3)/);
+											if (!match || !match[1]) {
+												return rej("Acapela MP3 URL not found in response.");
+											}
+										  
+											const audioUrl = match[1];
+											https.get(audioUrl, resolve).on("error", rej);
 										});
 										r.on("error", rej);
 									}
@@ -94,7 +100,28 @@ module.exports = function processVoice(voiceName, text) {
 					);
 					break;
 				}
-	
+
+				case "apple": {
+					const { MacinTalk } = require("node-macintalk");
+					try {
+						const tts = new MacinTalk()
+							.voice(voice.arg)
+							.text(text);
+				  
+					  	tts.generate()
+							.then(buffer => {
+								console.log("Generated buffer size:", buffer?.length);
+								return fileUtil.convertToMp3(buffer, "aiff")
+										.then(mp3 => resolve(mp3))
+										.catch(err => rej(err));
+							})
+							.catch(err => rej("Apple TTS failed: " + err.message));
+					} catch (err) {
+					  reject("Apple TTS exception: " + err.message);
+					}
+					break;
+				}				  
+
 				case "cepstral": {
 					https.get("https://www.cepstral.com/en/demos", async (r) => {
 						r.on("error", (e) => rej(e));
@@ -107,7 +134,7 @@ module.exports = function processVoice(voiceName, text) {
 							pitch: 1,
 							sfx: "none"
 						}).toString();
-	
+
 						https.get(
 							{
 								hostname: "www.cepstral.com",
@@ -130,53 +157,73 @@ module.exports = function processVoice(voiceName, text) {
 					});
 					break;
 				}
-	
+
 				case "cereproc": {
-					const req = https.request(
-						{
-							hostname: "www.cereproc.com",
-							path: "/themes/benchpress/livedemo.php",
-							method: "POST",
-							headers: {
-								"content-type": "text/xml",
-								"accept-encoding": "gzip, deflate, br",
-								origin: "https://www.cereproc.com",
-								referer: "https://www.cereproc.com/en/products/voices",
-								"x-requested-with": "XMLHttpRequest",
-								cookie: "Drupal.visitor.liveDemoCookie=666",
-							},
-						},
-						(r) => {
-							var buffers = [];
-							r.on("data", (d) => buffers.push(d));
-							r.on("end", () => {
-								const xml = String.fromCharCode.apply(null, brotli.decompress(Buffer.concat(buffers)));
-								const beg = xml.indexOf("<url>") + 5;
-								const end = xml.lastIndexOf("</url>");
-								const loc = xml.substring(beg, end).toString();
-								https.get(loc, resolve).on("error", rej);
-							});
-							r.on("error", rej);
+					const vUtil = require("../../utils/voiceUtil");
+					const { lang, accent } = vUtil.resolveCereprocAccent(voice);
+					const postData = new URLSearchParams({
+						text,
+						language: lang,
+						accent: accent,
+						voice: voice.arg,
+						form_id: "live_demo_form",
+						_triggering_element_name: "op",
+						_triggering_element_value: "Convert to Speech",
+						_drupal_ajax: 1
+					}).toString();
+
+					const reqOptions = {
+						hostname: "app.cereproc.com",
+						path: "/live-demo?ajax_form=1&_wrapper_format=drupal_ajax",
+						method: "POST",
+						headers: {
+							"Content-Type": "application/x-www-form-urlencoded",
+							"Content-Length": Buffer.byteLength(postData)
 						}
-					).on("error", rej);
-					req.end(
-						`<speakExtended key='666'><voice>${voice.arg}</voice><text>${text}</text><audioFormat>mp3</audioFormat></speakExtended>`
-					);
+					};
+
+					const req = https.request(reqOptions, (res) => {
+						let data = [];
+						res.on("data", chunk => data.push(chunk));
+						res.on("end", () => {
+							try {
+								const json = JSON.parse(Buffer.concat(data).toString());
+								const result = json.find(obj => obj.selector === "#live-demo-result");
+								const html = result?.data || "";
+								const match = html.match(/https:\/\/cerevoice\.s3\.amazonaws\.com\/[^\"']+\.wav/);
+
+								if (!match || !match[0]) return reject("Cereproc audio link not found");
+
+								const audioURL = match[0].replace(/\\/g, "");
+								https.get(audioURL, (stream) => {
+									fileUtil.convertToMp3(stream, "wav")
+										.then(mp3Buffer => resolve(mp3Buffer))
+										.catch(err => reject("MP3 conversion failed: " + err));
+								}).on("error", err => reject("Failed to download Cereproc WAV: " + err));
+							} catch (err) {
+								reject("Cereproc response parsing failed: " + err);
+							}
+						});
+					});
+
+					req.on("error", (err) => reject("Cereproc request failed: " + err));
+					req.write(postData);
+					req.end();
 					break;
 				}
-	
+
 				case "polly": {
 					const q = new URLSearchParams({
 						voice: voice.arg,
 						text: text,
 					}).toString();
-	
+
 					https
 						.get(`https://api.streamelements.com/kappa/v2/speech?${q}`, resolve)
 						.on("error", rej);
 					break;
 				}
-	
+
 				case "readloud": {
 					const body = new URLSearchParams({
 						but1: text,
@@ -203,7 +250,7 @@ module.exports = function processVoice(voiceName, text) {
 								const beg = html.indexOf("/tmp/");
 								const end = html.indexOf("mp3", beg) + 3;
 								const sub = html.subarray(beg, end).toString();
-	
+
 								https.get(`https://readloud.net${sub}`, (r2) => {
 									r2.on("error", (e) => rej(e));
 									resolve(r2);
@@ -214,7 +261,30 @@ module.exports = function processVoice(voiceName, text) {
 					req.end(body);
 					break;
 				}
-	
+
+				case "acapela2": {
+					var q = new URLSearchParams({
+						voiceSpeed: 100,
+						inputText: Buffer.from(text, 'utf8').toString('base64'),
+					}).toString();
+					https.get(
+						{
+							host: "voice.reverso.net",
+							path: `/RestPronunciation.svc/v1/output=json/GetVoiceStream/voiceName=${voice.arg}?${q}`,
+							headers: {
+								'Host': 'voice.reverso.net',
+								'Referer': 'voice.reverso.net',
+								'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/533.2 (KHTML, like Gecko) Chrome/6.0',
+								'Connection': 'Keep-Alive'
+							}
+						},
+						(r) => {
+							resolve(r)
+						}
+					);
+					break;
+				}
+
 				case "svox2": {
 					const q = new URLSearchParams({
 						speed: 0,
@@ -225,13 +295,13 @@ module.exports = function processVoice(voiceName, text) {
 						format: "mp3",
 						e: "audio.mp3"
 					}).toString();
-	
+
 					https
 						.get(`https://api.ispeech.org/api/rest?${q}`, resolve)
 						.on("error", rej);
 					break;
 				}
-	
+
 				case "tiktok": {
 					const req = https.request(
 						{
@@ -262,7 +332,7 @@ module.exports = function processVoice(voiceName, text) {
 					}));
 					break;
 				}
-	
+
 				case "vocalware": {
 					const [EID, LID, VID] = voice.arg;
 					const q = new URLSearchParams({
@@ -276,8 +346,7 @@ module.exports = function processVoice(voiceName, text) {
 						SceneID: 2703396,
 						HTTP_ERR: "",
 					}).toString();
-	
-					console.log(`https://cache-a.oddcast.com/tts/genB.php?${q}`)
+
 					https
 						.get(
 							{
@@ -307,7 +376,7 @@ module.exports = function processVoice(voiceName, text) {
 						voice_name: voice.arg,
 						speak_text: text,
 					}).toString();
-	
+
 					https
 						.get(`https://voicedemo.codefactoryglobal.com/generate_audio.asp?${q}`, resolve)
 						.on("error", rej);
@@ -323,7 +392,7 @@ module.exports = function processVoice(voiceName, text) {
 						format: "mp3",
 						e: "audio.mp3"
 					}).toString();
-	
+
 					https
 						.get(`https://api.ispeech.org/api/rest?${q}`, resolve)
 						.on("error", rej);
@@ -334,10 +403,13 @@ module.exports = function processVoice(voiceName, text) {
 					const vUtil = require("../../utils/voiceUtil");
 					// the people want this
 					text = await vUtil.convertText(text, voice.arg);
+					let fakeEmailArray = [];
+					for (let c = 0; c < 15; c++) fakeEmailArray.push(~~(65 + Math.random() * 26));
+					const email = `${String.fromCharCode.apply(null, fakeEmailArray)}@gmail.com`;
 					const queryString = new URLSearchParams({
 						msg: text,
 						voice: voice.arg,
-						email: "chopped@chin.com"
+						email: email
 					}).toString();
 					const req = https.request(
 						{
@@ -362,7 +434,7 @@ module.exports = function processVoice(voiceName, text) {
 					req.end();
 					break;
 				}
-	
+
 				default: {
 					return rej("Not implemented");
 				}
