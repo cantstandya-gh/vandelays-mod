@@ -66,26 +66,36 @@ const createWindow = () => {
 	// clear the menu bar
 	const template = [
 		{
-			label: "Wrapper Tools",
+			label: "File",
 			submenu: [
+				{ role: "quit" },
+				{ type: "separator" },
 				{
-					label: "Generate Grounded Threat",
+					label: "Grounded Generator",
 					click() {
 						const popup = new BrowserWindow({
-							width: 500,
-							height: 300,
-							title: "Grounded Threat Generator",
+							width: 600,
+							height: 400,
+							title: "Grounded Generator",
 							webPreferences: {
 								nodeIntegration: true,
 								contextIsolation: false
 							}
 						});
-						popup.loadFile(path.join(__dirname, "server/pages/tools/grounded.html"));
+						popup.setMenu(null);
+						popup.loadFile("wrapper/pages/grounded.html");
 					}
 				}
 			]
 		}
 	];
+
+	if (process.platform === 'darwin') {
+		template.unshift({
+			label: app.name,
+			submenu: []
+		});
+	}	
 	
 	Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 	
