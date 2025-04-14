@@ -102,6 +102,10 @@ module.exports = function processVoice(voiceName, text) {
 				}
 
 				case "dectalk": {
+					text = text
+						.replace(/{lt}/gi, "<")
+						.replace(/{gt}/gi, ">")
+						.replace(/{caret}/g, "^"); // optional, for caret macros
 					const combinedText = `${voice.arg} ${text}`;
 					const encoded = encodeURIComponent(combinedText);
 					const triggerURL = `https://tts.cyzon.us/tts?text=${encoded}`;
@@ -123,7 +127,6 @@ module.exports = function processVoice(voiceName, text) {
 							rej(`DECTalk failed to redirect properly. Status: ${res.statusCode}`);
 						}
 					}).on("error", rej);
-				
 					break;
 				}
 				
