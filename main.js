@@ -64,7 +64,31 @@ const createWindow = () => {
 
 	// initialize stuff
 	// clear the menu bar
-	Menu.setApplicationMenu(Menu.buildFromTemplate([]));
+	const template = [
+		{
+			label: "Wrapper Tools",
+			submenu: [
+				{
+					label: "Generate Grounded Threat",
+					click() {
+						const popup = new BrowserWindow({
+							width: 500,
+							height: 300,
+							title: "Grounded Threat Generator",
+							webPreferences: {
+								nodeIntegration: true,
+								contextIsolation: false
+							}
+						});
+						popup.loadFile(path.join(__dirname, "server/pages/tools/grounded.html"));
+					}
+				}
+			]
+		}
+	];
+	
+	Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+	
 	// load the video list
 	mainWindow.loadURL("http://localhost:4343");
 	mainWindow.on("closed", () => mainWindow = null);
