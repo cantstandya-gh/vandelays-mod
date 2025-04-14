@@ -17,7 +17,7 @@ let xml = "";
   if (os.platform() === "darwin") {
     console.log("MacOS detected. Loading node-macintalk...");
     try {
-      const { listVoices } = require("node-macintalk");
+      const { listVoices } = require("../../utils/node-macintalk");
       const list = await listVoices();
       const macVoices = list?.macOS;
 

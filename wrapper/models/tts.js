@@ -102,7 +102,7 @@ module.exports = function processVoice(voiceName, text) {
 				}
 
 				case "apple": {
-					const { MacinTalk } = require("node-macintalk");
+					const { MacinTalk } = require("../../utils/node-macintalk");
 					try {
 						const tts = new MacinTalk()
 							.voice(voice.arg)
