@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Grounded Threat Generator</title>
+	<link rel="stylesheet" href="/pages/css/global.css">
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			margin: 40px;
+			background: #f7f7f7;
+		}
+		.container {
+			max-width: 720px;
+			margin: auto;
+			background: white;
+			padding: 30px;
+			border-radius: 10px;
+			box-shadow: 0 0 10px rgba(0,0,0,0.1);
+		}
+		label {
+			font-weight: bold;
+			margin-top: 15px;
+			display: block;
+		}
+		input {
+			width: 100%;
+			padding: 8px;
+			margin-top: 5px;
+			margin-bottom: 15px;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+		}
+		textarea {
+			width: 100%;
+			height: 200px;
+			margin-top: 10px;
+			padding: 10px;
+			font-size: 14px;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+			resize: vertical;
+		}
+		button {
+			padding: 10px 20px;
+			margin: 5px 5px 10px 0;
+			font-size: 16px;
+			cursor: pointer;
+			background: #2196f3;
+			color: white;
+			border: none;
+			border-radius: 4px;
+		}
+		button.back {
+			background: #ccc;
+			color: black;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h2>Grounded Threat Generator</h2>
+		<label for="name">Character Name:</label>
+		<input type="text" id="name" placeholder="e.g. Caillou">
+
+		<label for="action">What did they do?</label>
+		<input type="text" id="action" placeholder="e.g. flush the dog down the toilet">
+
+		<button onclick="generate()">Generate</button>
+		<button onclick="copy()">Copy</button>
+		<button class="back" onclick="window.history.back()">← Back</button>
+
+		<label for="result">Result:</label>
+		<textarea id="result" readonly></textarea>
+	</div>
+
+	<script>
+		function generate() {
+			const name = document.getElementById("name").value.trim();
+			const action = document.getElementById("action").value.trim();
+			if (!name || !action) {
+				alert("Please enter both fields.");
+				return;
+			}
+
+			const pattern = Math.random() > 0.5 ? "OH" : "O";
+			const count = Math.floor(Math.random() * 5) + 8;
+			let start = "";
+
+			if (pattern === "OH") {
+				for (let i = 0; i < count - 1; i++) start += "OH ";
+				start += "OH!";
+			} else {
+				for (let i = 0; i < count; i++) start += "O ";
+				for (let i = 0; i < count - 1; i++) start += "H ";
+				start += "H!";
+			}
+
+			const groundedRepeat = Math.random() > 0.5 ? 4 : 8;
+			const grounded = "grounded ".repeat(groundedRepeat).trim();
+			const number = Math.floor(Math.random() * (9999999999999999999999 - 7000000000000000000001)) + 7000000000000000000001;
+			const unit = ["weeks", "months", "years", "decades", "centuries"][Math.floor(Math.random() * 5)];
+
+			const final = `${start} ${name}, how dare you ${action}! That's it! You are ${grounded} for ${number} ${unit}. Go to your room now!`;
+			document.getElementById("result").value = final;
+		}
+
+		function copy() {
+			const txt = document.getElementById("result");
+			txt.select();
+			txt.setSelectionRange(0, 99999);
+			document.execCommand("copy");
+			alert("Copied!");
+		}
+	</script>
+</body>
+</html>

@@ -174,6 +174,8 @@ module.exports = function processVoice(voiceName, text) {
 				case "cepstral": {
 					https.get("https://www.cepstral.com/en/demos", async (r) => {
 						r.on("error", (e) => rej(e));
+						const vUtil = require("../../utils/voiceUtil");
+						text = await vUtil.convertText(text, voice.arg);
 						const cookie = r.headers["set-cookie"];
 						const q = new URLSearchParams({
 							voiceText: text,

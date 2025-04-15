@@ -70,7 +70,7 @@ module.exports = function () {
 				}
 			}
 		})
-		.listen(process.env.SERVER_PORT, console.log("Wrapper: Offline has started."));
+		.listen(process.env.SERVER_PORT, console.log("Vandelay's Mod has started."));
 	
 	return server;
 };

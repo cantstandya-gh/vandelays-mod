@@ -52,7 +52,7 @@ const createWindow = () => {
 	mainWindow = new BrowserWindow({
 		width: 1200,
 		height: 700,
-		title: "Wrapper: Offline",
+		title: "Vandelay's Mod",
 		icon: path.join(__dirname, "./server/favicon.ico"),
 		webPreferences: {
 			plugins: true,

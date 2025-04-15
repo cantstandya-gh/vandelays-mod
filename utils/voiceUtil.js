@@ -207,7 +207,8 @@ module.exports = {
                     isscream = true;
                   }
                   if (!isscream) {
-                    let xmlText = `<phoneme ph="${voiceValues.join(" ")}">Cepstral</phoneme>`;
+                    const matchText = match[i].replace(/[!?.]$/, "");
+                    let xmlText = `<phoneme ph="${voiceValues.join(" ")}">${matchText}</phoneme>`;
                     modifiedText = !modifiedText ? inputText.replace(match[i], xmlText) : modifiedText.replace(match[i], xmlText);
                     let modifiedExclimation;
         

@@ -35,6 +35,11 @@ group
 		discord("Video List");
 		res.render("list", {});
 	})
+	// grounded threat generator
+	.route("*", "/grounded", (req, res) => {
+		discord("Grounded Threat Generator");
+		res.render("grounded", {});
+	})
 	// settings
 	.route("*", "/settings", (req, res) => {
 		discord("Settings");
