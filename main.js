@@ -61,43 +61,10 @@ const createWindow = () => {
 	});
 	// use it in external scripts
 	process.env.MAIN_WINDOW_ID = mainWindow.id;
-
+	
 	// initialize stuff
 	// clear the menu bar
-	const template = [
-		{
-			label: "File",
-			submenu: [
-				{ role: "quit" },
-				{ type: "separator" },
-				{
-					label: "Grounded Generator",
-					click() {
-						const popup = new BrowserWindow({
-							width: 600,
-							height: 400,
-							title: "Grounded Generator",
-							webPreferences: {
-								nodeIntegration: true,
-								contextIsolation: false
-							}
-						});
-						popup.setMenu(null);
-						popup.loadFile("wrapper/pages/grounded.html");
-					}
-				}
-			]
-		}
-	];
-
-	if (process.platform === 'darwin') {
-		template.unshift({
-			label: app.name,
-			submenu: []
-		});
-	}	
-	
-	Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+	Menu.setApplicationMenu(Menu.buildFromTemplate([]));
 	
 	// load the video list
 	mainWindow.loadURL("http://localhost:4343");
